@@ -1,0 +1,9 @@
+*.mp4
+*.flac
+*.wav
+/*.docx
+
+**/__pycache__/
+
+FLAC Manim/media/
+FLAC Manim/.ipynb_checkpoints/
