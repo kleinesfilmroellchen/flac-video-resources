@@ -1,0 +1,776 @@
+1
+00:00:00,149 --> 00:00:02,120
+Hello, and welcome, dear viewer.
+
+2
+00:00:02,120 --> 00:00:07,270
+If you are alive in the year 2021, chances
+are you’ve used audio files before.
+
+3
+00:00:07,270 --> 00:00:09,669
+No, not that kind, the other one.
+
+4
+00:00:09,669 --> 00:00:13,030
+Think about the different digital audio formats
+you know.
+
+5
+00:00:13,030 --> 00:00:17,439
+There’s WAV, MP3, maybe you also know about
+OGG or AAC.
+
+6
+00:00:17,439 --> 00:00:22,170
+But I want to talk about FLAC, the free lossless
+audio codec.
+
+7
+00:00:22,170 --> 00:00:24,330
+But why should you care?
+
+8
+00:00:24,330 --> 00:00:29,070
+Well, we’ll get to that later, but here
+are my own reasons summarized.
+
+9
+00:00:29,070 --> 00:00:33,970
+FLAC is an open standard, there’s an open-source
+reference implementation, reasonably good
+
+10
+00:00:33,970 --> 00:00:37,730
+documentation and it has medium implementing
+difficulty
+
+11
+00:00:37,730 --> 00:00:42,680
+There’s not much “easy” information
+on FLAC out there
+
+12
+00:00:42,680 --> 00:00:47,730
+Learning about FLAC gives insight into a lot
+of aspects of digital audio, data compression,
+
+13
+00:00:47,730 --> 00:00:52,150
+and data storage
+I have spent at least 2 months rabbit-hole-ing
+
+14
+00:00:52,150 --> 00:00:58,250
+myself into FLAC and implementing a decoder
+from scratch for SerenityOS
+
+15
+00:00:58,250 --> 00:01:00,590
+First some background on the codec itself.
+
+16
+00:01:00,590 --> 00:01:05,220
+FLAC was released in 2001, which means it’s
+one of the newest of the “first generation”
+
+17
+00:01:05,220 --> 00:01:09,150
+of compressed audio codecs, eight entire years
+later than MP3.
+
+18
+00:01:09,150 --> 00:01:13,840
+It’s an open standard from beginning to
+end and even discourages DRM measures.
+
+19
+00:01:13,840 --> 00:01:18,110
+Although many of you may have never heard
+of it, it holds an important position as being
+
+20
+00:01:18,110 --> 00:01:23,000
+very fast to decode and therefore suitable
+for “weaker” hardware such as embedded
+
+21
+00:01:23,000 --> 00:01:25,050
+devices or even microcontrollers.
+
+22
+00:01:25,050 --> 00:01:30,640
+Also, as you will see later, it’s an ideal
+format for transcoding CD audio.
+
+23
+00:01:30,640 --> 00:01:32,530
+So what’s so special about FLAC?
+
+24
+00:01:32,530 --> 00:01:35,060
+It’s in the name: lossless.
+
+25
+00:01:35,060 --> 00:01:38,820
+When we talk about file formats, generally
+there are three kinds.
+
+26
+00:01:38,820 --> 00:01:44,270
+The uncompressed are the oldest and simplest
+because all they do is store data.
+
+27
+00:01:44,270 --> 00:01:50,021
+That is your BMP for images, WAV or CDA for
+audio, and – wait, there aren’t really
+
+28
+00:01:50,021 --> 00:01:54,200
+uncompressed formats for video because file
+sizes would be ridiculous.
+
+29
+00:01:54,200 --> 00:01:58,290
+That’s the problem with this approach in
+general, even though it’s easy to come up
+
+30
+00:01:58,290 --> 00:02:00,700
+with such a standard and implement it.
+
+31
+00:02:00,700 --> 00:02:04,110
+Next, we have compressed lossless formats.
+
+32
+00:02:04,110 --> 00:02:09,599
+These store all the data that originally existed,
+nothing more and nothing less, but take less
+
+33
+00:02:09,599 --> 00:02:12,150
+space than the original data with clever tricks.
+
+34
+00:02:12,150 --> 00:02:17,799
+You see, sensible data that we humans produce
+and recognize isn’t really random, it has
+
+35
+00:02:17,799 --> 00:02:20,569
+lots of patterns.
+
+36
+00:02:20,569 --> 00:02:26,220
+Compression algorithms exploit these patterns
+to remove information that can be fully reconstructed.
+
+37
+00:02:26,220 --> 00:02:29,099
+For example, imagine a piece of English text.
+
+38
+00:02:29,099 --> 00:02:32,279
+The word “the” would be pretty common,
+right?
+
+39
+00:02:32,279 --> 00:02:37,190
+So what a text compressing format can do is
+instead of storing “the” a thousand times,
+
+40
+00:02:37,190 --> 00:02:42,299
+it just stores: “well, the word “the”
+should be at this position, that position,
+
+41
+00:02:42,299 --> 00:02:45,629
+and these other 998 positions”.
+
+42
+00:02:45,629 --> 00:02:47,959
+That will take up much less space.
+
+43
+00:02:47,959 --> 00:02:50,680
+In fact: it’s pretty much what ZIP does.
+
+44
+00:02:50,680 --> 00:02:55,530
+The same thing can be done with non-text data,
+except other, even more clever patterns are
+
+45
+00:02:55,530 --> 00:02:56,530
+exploited.
+
+46
+00:02:56,530 --> 00:03:02,219
+This way, we get PNG for images, FLAC for
+audio, and Google’s VP9 for video.
+
+47
+00:03:02,219 --> 00:03:05,680
+You see, here is where FLAC belongs!
+
+48
+00:03:05,680 --> 00:03:09,739
+But just to finish up, we of course can go
+one step further.
+
+49
+00:03:09,739 --> 00:03:13,329
+Lossy compression starts from the same point
+as lossless compression does.
+
+50
+00:03:13,329 --> 00:03:18,439
+Except this time, we do another trick: Many
+high-information types of data, like audio,
+
+51
+00:03:18,439 --> 00:03:23,469
+video, and images, can be stored at a level
+of detail that humans can’t even distinguish.
+
+52
+00:03:23,469 --> 00:03:27,760
+We can’t hear quiet sounds or small differences
+in sound.
+
+53
+00:03:27,760 --> 00:03:32,010
+We can’t see minor differences in color
+or small fluctuations in light.
+
+54
+00:03:32,010 --> 00:03:36,199
+We can distinguish even less detail in moving
+pictures.
+
+55
+00:03:36,199 --> 00:03:41,699
+So lossy compression just throws away all
+the data that a human is unlikely to notice
+
+56
+00:03:41,699 --> 00:03:42,699
+anyways.
+
+57
+00:03:42,699 --> 00:03:49,629
+Here, we finally get JPEG for images, MP3
+for audio, and H.264 for video, which is the
+
+58
+00:03:49,629 --> 00:03:52,579
+thing you most likely call MP4.
+
+59
+00:03:52,579 --> 00:03:57,889
+So FLAC sits in between the uncompressed codecs
+and the lossy codecs, as being both compressed
+
+60
+00:03:57,889 --> 00:03:59,589
+and lossless.
+
+61
+00:03:59,589 --> 00:04:04,010
+I have been interested in FLAC for quite some
+time now, and one time around the beginning
+
+62
+00:04:04,010 --> 00:04:12,559
+of May, I decided to create a FLAC loader
+and decoder for SerenityOS’s LibAudio.
+
+63
+00:04:12,559 --> 00:04:16,549
+If you haven’t yet heard of the SerenityOS
+project, it’s a from-scratch graphical Unix
+
+64
+00:04:16,549 --> 00:04:19,959
+operating system that is visually based on
+90’s user interfaces.
+
+65
+00:04:19,959 --> 00:04:23,909
+It’s a three-year-old open-source project
+in an early state, so there’s a bunch of
+
+66
+00:04:23,909 --> 00:04:25,050
+work to be done.
+
+67
+00:04:25,050 --> 00:04:26,250
+Like implementing audio formats.
+
+68
+00:04:26,250 --> 00:04:32,730
+Anyways, if you want to try out SerenityOS
+or even contribute, there are links everywhere.
+
+69
+00:04:32,730 --> 00:04:37,000
+After having the struggle of my life for two
+months, now I understand the FLAC standard
+
+70
+00:04:37,000 --> 00:04:39,620
+well enough to make these videos.
+
+71
+00:04:39,620 --> 00:04:42,750
+So that hopefully other people won’t struggle
+as much.
+
+72
+00:04:42,750 --> 00:04:44,530
+Let’s go.
+
+73
+00:04:44,530 --> 00:04:49,759
+Before we start with anything that is specific
+to FLAC, it’s good to have a baseline understanding
+
+74
+00:04:49,759 --> 00:04:51,560
+of digital audio.
+
+75
+00:04:51,560 --> 00:04:54,810
+To understand digital audio, we need to understand
+audio itself.
+
+76
+00:04:54,810 --> 00:04:58,600
+You’ve probably already heard this, but
+fundamentally, sound is nothing more than
+
+77
+00:04:58,600 --> 00:05:03,669
+rapidly changing air pressure, created by
+natural objects such a string, a resonating
+
+78
+00:05:03,669 --> 00:05:08,970
+body of air, or much simpler, some fancy stuff
+in your body that lets you speak.
+
+79
+00:05:08,970 --> 00:05:13,990
+When I say rapid changes, I mean between about
+20 and 20 thousand changes per second.
+
+80
+00:05:13,990 --> 00:05:19,050
+These vibrations happen in the pattern of
+waves travelling through a medium like air,
+
+81
+00:05:19,050 --> 00:05:25,020
+one wave is a high point and a low point in
+pressure that follow after one another.
+
+82
+00:05:25,020 --> 00:05:30,159
+How often such a wave is produced is called
+its frequency, measured in Hertz.
+
+83
+00:05:30,159 --> 00:05:33,099
+Higher frequency equals more waves per second.
+
+84
+00:05:33,099 --> 00:05:37,620
+That’s what humans can hear, more specifically,
+that’s what all of this complicated biology
+
+85
+00:05:37,620 --> 00:05:40,710
+in your ear can decipher into high and low
+pitches.
+
+86
+00:05:40,710 --> 00:05:45,419
+But let’s suppose that you can’t afford
+to have a private news speaker whenever you
+
+87
+00:05:45,419 --> 00:05:49,620
+need them, or even an orchestra at your disposal
+whenever you wanna listen to some music.
+
+88
+00:05:49,620 --> 00:05:51,729
+I know, hard to imagine.
+
+89
+00:05:51,729 --> 00:05:56,289
+For that, we need to record some audio so
+that we can play it back later.
+
+90
+00:05:56,289 --> 00:06:01,479
+Microphones and the likes can translate air
+pressure to electricity, so now we’re in
+
+91
+00:06:01,479 --> 00:06:03,259
+the electronic realm.
+
+92
+00:06:03,259 --> 00:06:08,610
+But there are still two major problems with
+this signal that’s now expressed in voltage.
+
+93
+00:06:08,610 --> 00:06:10,110
+Can you guess?
+
+94
+00:06:10,110 --> 00:06:13,960
+It’s continuous, in time and in gain.
+
+95
+00:06:13,960 --> 00:06:19,560
+No matter how close you pick two points of
+time on the signal, there’s always an infinite
+
+96
+00:06:19,560 --> 00:06:22,650
+amount of information in between them.
+
+97
+00:06:22,650 --> 00:06:27,789
+And additionally, the signal’s actual gain
+can take any value, at least any value loud
+
+98
+00:06:27,789 --> 00:06:31,310
+enough and also quiet enough that your microphone
+could pick it up.
+
+99
+00:06:31,310 --> 00:06:36,590
+That’s just what we call an analog electric
+audio signal, it’s simply a direct translation
+
+100
+00:06:36,590 --> 00:06:40,810
+of another analog signal, in this case, the
+air pressure.
+
+101
+00:06:40,810 --> 00:06:45,550
+But this becomes an issue once we want a computer
+to talk to the audio world.
+
+102
+00:06:45,550 --> 00:06:49,860
+The information here is way too much for us
+to store in a computer, in fact, it’s an
+
+103
+00:06:49,860 --> 00:06:52,469
+infinite amount of information!
+
+104
+00:06:52,469 --> 00:06:57,159
+And as you know, all computers can store is
+numbers, finitely many, and those numbers
+
+105
+00:06:57,159 --> 00:06:59,639
+are also not continuous.
+
+106
+00:06:59,639 --> 00:07:04,289
+So how do we take this analog signal and turn
+it into something we might call digital, something
+
+107
+00:07:04,289 --> 00:07:08,560
+that a computer can take in, process, store,
+transmit, and do all the other fun stuff that
+
+108
+00:07:08,560 --> 00:07:10,449
+we like to do with data.
+
+109
+00:07:10,449 --> 00:07:13,330
+The key is that humans are really bad at hearing.
+
+110
+00:07:13,330 --> 00:07:17,620
+For starters, I already mentioned that we
+can’t hear changes in air pressure faster
+
+111
+00:07:17,620 --> 00:07:19,150
+than a certain point.
+
+112
+00:07:19,150 --> 00:07:24,879
+20 kHz is actually just an upper limit of
+the highest frequency, most adults can’t
+
+113
+00:07:24,879 --> 00:07:26,379
+hear that anymore.
+
+114
+00:07:26,379 --> 00:07:30,860
+And second, below a certain threshold , we
+can’t discern the loudness of two different
+
+115
+00:07:30,860 --> 00:07:34,030
+sounds at slightly different volumes.
+
+116
+00:07:34,030 --> 00:07:38,979
+So what we can do is preserve just enough
+information so that a human can’t figure
+
+117
+00:07:38,979 --> 00:07:43,340
+out the difference between a real and a “fake”
+audio signal.
+
+118
+00:07:43,340 --> 00:07:49,080
+The first step is to remove the time continuity
+of the signal, making it discrete in time.
+
+119
+00:07:49,080 --> 00:07:54,439
+We do that through a process called “sampling”:
+At regular intervals, we take note of the
+
+120
+00:07:54,439 --> 00:08:00,430
+strength of the signal, in our case the voltage,
+removing all the information in between . I’ll
+
+121
+00:08:00,430 --> 00:08:04,680
+not go into the details here, but because
+of something called the Nyquist-Shannon sampling
+
+122
+00:08:04,680 --> 00:08:10,620
+theorem, it is mathematically proven that
+we can recreate any frequency that is sampled
+
+123
+00:08:10,620 --> 00:08:16,969
+at least twice per oscillation , meaning that
+if the highest necessary frequency has 20,000
+
+124
+00:08:16,969 --> 00:08:21,999
+oscillations per second, we need to sample
+it 40,000 times per second.
+
+125
+00:08:21,999 --> 00:08:26,300
+The term “Hertz” for describing how often
+something happens per second is also used
+
+126
+00:08:26,300 --> 00:08:32,099
+for sampling, so for this, we would say a
+“sampling rate” of 40 kHz.
+
+127
+00:08:32,099 --> 00:08:39,290
+You might have heard of the sampling rates
+44.1 kHz or 48 kHz.
+
+128
+00:08:39,290 --> 00:08:43,710
+Those are the most common ones and the reason
+that they’re higher than 40 kHz is unfortunately
+
+129
+00:08:43,710 --> 00:08:48,880
+not something I can go into today .
+And second, we need to remove the remaining
+
+130
+00:08:48,880 --> 00:08:51,500
+value continuity of these sample points.
+
+131
+00:08:51,500 --> 00:08:56,820
+That’s called quantization . We translate
+these voltages into whole numbers , where
+
+132
+00:08:56,820 --> 00:09:01,590
+the lowest number represents the lowest signal
+strength and the highest number the highest
+
+133
+00:09:01,590 --> 00:09:02,700
+signal strength.
+
+134
+00:09:02,700 --> 00:09:05,800
+Now, how many numbers do we need here?
+
+135
+00:09:05,800 --> 00:09:09,990
+The critical question is again; at what point
+can a human no longer hear the difference
+
+136
+00:09:09,990 --> 00:09:11,440
+in volume?
+
+137
+00:09:11,440 --> 00:09:16,710
+If we had six different values, we could have
+three different volumes for an audio wave.
+
+138
+00:09:16,710 --> 00:09:20,320
+That’s almost a difference between 30% and
+70% volume, and you can clearly hear that.
+
+139
+00:09:20,320 --> 00:09:25,680
+But it turns out that once we reach about
+50,000 different volumes for signals, the
+
+140
+00:09:25,680 --> 00:09:28,600
+human hearing stops noticing a difference.
+
+141
+00:09:28,600 --> 00:09:33,260
+We call whatever amount of different values
+we allow our “bit depth”.
+
+142
+00:09:33,260 --> 00:09:36,900
+Because in reality these numbers will all
+be stored in binary by the computer, so it
+
+143
+00:09:36,900 --> 00:09:40,550
+makes sense that the range in values is a
+power of two.
+
+144
+00:09:40,550 --> 00:09:46,610
+By the bit depth, we don’t directly mean
+the number of possible values, like 65,536,
+
+145
+00:09:46,610 --> 00:09:52,280
+we instead mean the number of bits we use
+to store one such sample value, like 16.
+
+146
+00:09:52,280 --> 00:09:58,510
+As I’ve already said, a bit depth of 16
+is about at the limit of what humans can hear,
+
+147
+00:09:58,510 --> 00:10:04,650
+so bit depths below that are uncommon, but
+above it are sometimes seen.
+
+148
+00:10:04,650 --> 00:10:06,530
+So let’s revisit that.
+
+149
+00:10:06,530 --> 00:10:11,320
+What we have now is a list of numbers, each
+representing the strength of an audio signal
+
+150
+00:10:11,320 --> 00:10:17,070
+at some point in time, with all these points
+in time regularly spaced according to a sample
+
+151
+00:10:17,070 --> 00:10:18,190
+rate.
+
+152
+00:10:18,190 --> 00:10:23,600
+The bit rate of the numbers tells us the maximum
+and minimum values, which represent the real-world
+
+153
+00:10:23,600 --> 00:10:26,950
+maximum and minimum pressure or voltage.
+
+154
+00:10:26,950 --> 00:10:32,840
+This is called pulse code modulation, PCM,
+and it’s by far the most important way of
+
+155
+00:10:32,840 --> 00:10:35,630
+digitizing any signal, not just audio.
+
+156
+00:10:35,630 --> 00:10:37,630
+There are variations we can do here [non-linear
+quantization, dynamic sample rates], but remember
+
+157
+00:10:37,630 --> 00:10:44,840
+that this is all because circuits, real digital-analog
+electronic hardware components, can do these
+
+158
+00:10:44,840 --> 00:10:51,950
+conversions super easily and accurately, both
+going from analog to digital, and from digital
+
+159
+00:10:51,950 --> 00:10:54,710
+to analog.
+
+160
+00:10:54,710 --> 00:10:59,130
+And unfortunately for you, the early viewer,
+this is where I’ll end the first video of
+
+161
+00:10:59,130 --> 00:11:00,170
+the FLAC series.
+
+162
+00:11:00,170 --> 00:11:05,050
+I’m planning to cover every single part
+of the specification, including, what you
+
+163
+00:11:05,050 --> 00:11:08,400
+saw today, all the audio fundamentals you’ll
+have to know.
+
+164
+00:11:08,400 --> 00:11:13,330
+In episode 2, we’ll have a look at how we
+can losslessly compress the audio data we
+
+165
+00:11:13,330 --> 00:11:19,220
+have now obtained, and in episode 3, we’ll
+peek inside how FLAC stores all of this stuff.
+

@@ -23,7 +23,14 @@ mono_font_args['font'] = MONOSPACE_FONT
 mono_font_args['font_size'] = DEFAULT_FONT_SIZE * 0.6
 mono_font_args['weight'] = NORMAL
 
-theming_colors = [BLUE, ORANGE, GREEN, YELLOW, TEAL, RED]
+# Theming colors are used in this order of priority, meaning that color 1 is generally used more often than color 2
+# 0: Main accent color, (sample) data, functions, bit depth
+# 1: Grids, highlight, sometimes functions
+# 2: Secondary accent color, functions, approximators & construction functions
+# 3: Highlight 1 (when grid is active)
+# 4: Residuals, anything else
+# 5: Highlight 2 (when grid is active and 3 is taken)
+theming_colors = [BLUE, ORANGE, GREEN, YELLOW, TEAL, PURPLE]
 TRANSPARENT = rgba_to_color([0, 0, 0, 0])
 
 
